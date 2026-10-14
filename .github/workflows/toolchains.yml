@@ -1,0 +1,89 @@
+name: aarch64 toolchains (Termux)
+
+# Builds every period compiler for aarch64 (Android/Termux's architecture), validates its
+# codegen byte-for-byte against the official x86_64 releases, runs the decompnet test suite
+# against the freshly built toolchains, and uploads the artifacts for the toolchains-v1 release.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "termux/toolchain-build/**"
+      - ".github/workflows/toolchains.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bison gperf file flex zip wget xz-utils
+
+      - name: Build every aarch64 toolchain
+        run: bash termux/toolchain-build/build-all.sh
+
+      - name: Validate codegen byte-for-byte against the official releases
+        run: bash termux/toolchain-build/validate-toolchains.sh "$PWD/out/toolchains-aarch64"
+
+      - name: Upload toolchain artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolchains-aarch64
+          path: out/toolchains-aarch64/
+          retention-days: 30
+          if-no-files-found: error
+
+  tests:
+    runs-on: ubuntu-24.04-arm
+    needs: build
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lld llvm clang build-essential zip
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install decompnet and the test suite
+        run: |
+          python -m pip install uv
+          uv sync --frozen
+          uv pip install -e .
+
+      - name: Download built toolchains
+        uses: actions/download-artifact@v4
+        with:
+          name: toolchains-aarch64
+          path: out/toolchains-aarch64
+
+      - name: Seed the toolchain registry with the fresh aarch64 builds
+        run: uv run python termux/toolchain-build/seed-toolchains.py out/toolchains-aarch64 /tmp/tcroot
+
+      - name: Run the PlayStation / N64 / GBA test suites (byte-for-byte matching)
+        env:
+          DECOMPNET_TOOLCHAINS: /tmp/tcroot
+        run: |
+          uv run python projects/zlib-n64/prepare.py
+          uv run pytest tests/test_psx.py tests/test_rom.py tests/test_gba.py tests/test_toolchains.py -v
+
+      - name: Upload pytest logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-logs-aarch64
+          path: |
+            projects/*/build/
+            /tmp/tcroot/**/.decompnet-toolchain.json
+          retention-days: 7

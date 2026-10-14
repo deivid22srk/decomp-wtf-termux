@@ -1,0 +1,44 @@
+name: CI
+
+# Fast checks: shell hygiene on every shell script, plus the Python test suite on x86_64.
+# The heavy aarch64 compiler builds and their byte-for-byte validation live in toolchains.yml.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck -x install.sh termux/sanity-test.sh termux/decomp termux/decomp-update \
+            termux/decomp-uninstall termux/toolchain-build/*.sh
+
+  pytest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lld llvm zip
+          python -m pip install uv
+          uv sync --frozen
+      - name: Run the test suite that needs no period compiler
+        env:
+          DECOMPNET_TOOLCHAINS: /tmp/empty-toolchains
+        run: uv run pytest tests/ -v --ignore=tests/test_psx.py --ignore=tests/test_rom.py \
+          --ignore=tests/test_gba.py --ignore=tests/test_gc.py --ignore=tests/test_ds.py \
+          --ignore=tests/test_ps2.py --ignore=tests/test_period_compilers.py
