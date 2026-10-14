@@ -59,17 +59,19 @@ case = """	aarch64-*-linux* | x86_64-*-linux*)	# 64-bit ARM / x86-64 Linux (Term
 """
 anchors = [
     # gcc 2.7.2 era: the first i386 linux case
-    ("\ti[345]86-*-linux*oldld*)\t# Intel 80386's running Linux\n", "before"),
+    "\ti[345]86-*-linux*oldld*)\t# Intel 80386's running Linux\n",
+    # gcc 2.8.1 era: the first i386 linux case
+    "\ti[34567]86-*-linux-gnuoldld*)\t# Intel 80386's running GNU/Linux\n",
 ]
 inserted = False
-for anchor, where in anchors:
+for anchor in anchors:
     if anchor in s:
         s = s.replace(anchor, case + anchor, 1)
         inserted = True
         break
 if not inserted:
-    # gcc 2.8.1 era: find ANY "i[345]86-*-linux*)" case start and insert before it
-    m = re.search(r"\n(\ti\[345\]86-\*-linux\*[\)*][^\n]*\n)", s)
+    # fall back to any "i[3-7]86-*-linux*" case start and insert before it
+    m = re.search(r"\n(\ti\[34567\]86-\*-linux[^\n]*\n)", s)
     if not m:
         sys.exit(f"configure: no i386-linux case found in {conf} — inspect it and extend patch-gcc-host.py")
     s = s[:m.start(1)] + case + s[m.start(1):]
