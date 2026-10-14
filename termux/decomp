@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# `decomp`: start decomp.wtf (or bring the running one to the front) and open it in Android's browser.
+# Installed by the Termux port's install.sh. Holds a wake lock while the server runs, so Android
+# doesn't freeze the compile jobs when the screen turns off.
+set -euo pipefail
+
+if command -v termux-wake-lock >/dev/null 2>&1; then termux-wake-lock || true; fi
+cleanup() { if command -v termux-wake-unlock >/dev/null 2>&1; then termux-wake-unlock || true; fi; }
+trap cleanup EXIT
+
+# decompnet needs a writable temp dir; Termux sets TMPDIR in interactive shells only
+export TMPDIR="${TMPDIR:-$PREFIX/tmp}"
+mkdir -p "$TMPDIR"
+
+BIN="$(uv tool dir --bin 2>/dev/null || echo "$PREFIX/bin")"
+exec "$BIN/decomp" "$@"

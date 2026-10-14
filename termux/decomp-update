@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# `decomp-update`: update the Termux port of decomp.wtf (code + compilers) and restart it.
+set -euo pipefail
+
+REPO="${DECOMP_PORT_REPO:-https://github.com/deivid22srk/decomp-wtf-termux}"
+BRANCH="${DECOMP_PORT_BRANCH:-main}"
+SRC="${DECOMP_PORT_SRC:-$HOME/.decomp-port-src}"
+
+echo "parando o decomp.wtf que estiver rodando..."
+"$(uv tool dir --bin 2>/dev/null || echo "$PREFIX/bin")/decomp" stop >/dev/null 2>&1 || true
+
+echo "atualizando pacotes..."
+yes | pkg update -y >/dev/null 2>&1 || true
+pkg upgrade -y >/dev/null 2>&1 || true
+
+echo "atualizando o código do port..."
+if [ -d "$SRC/.git" ]; then
+  git -C "$SRC" fetch origin "$BRANCH" --quiet
+  git -C "$SRC" reset --hard "origin/$BRANCH" --quiet
+else
+  git clone --depth 1 -b "$BRANCH" "$REPO.git" "$SRC"
+fi
+
+echo "reinstalando o decompnet..."
+uv tool install --force --python "$(command -v python)" "$SRC"
+
+echo "atualizando os atalhos..."
+for c in decomp decomp-update decomp-uninstall; do
+  cp "$SRC/termux/$c" "$PREFIX/bin/$c" && chmod +x "$PREFIX/bin/$c"
+done
+
+echo "✅ atualizado. Digite: decomp"

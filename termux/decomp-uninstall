@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# `decomp-uninstall`: remove the Termux port of decomp.wtf (projects in ~/Decomp are kept).
+set -euo pipefail
+
+SRC="${DECOMP_PORT_SRC:-$HOME/.decomp-port-src}"
+
+echo "parando e removendo o decompnet..."
+"$(uv tool dir --bin 2>/dev/null || echo "$PREFIX/bin")/decomp" stop >/dev/null 2>&1 || true
+uv tool uninstall decompnet 2>/dev/null || true
+
+echo "removendo os atalhos..."
+rm -f "$PREFIX/bin/decomp" "$PREFIX/bin/decomp-update" "$PREFIX/bin/decomp-uninstall"
+
+echo "removendo o código-fonte do port e os compiladores instalados..."
+rm -rf "$SRC" "$HOME/.local/share/decompnet" "$HOME/.decomp-port-battery-note"
+
+echo ""
+echo "Os seus projetos continuam em ~/Decomp — apague se quiser:"
+echo "  rm -rf ~/Decomp"
+echo "✅ desinstalado."
