@@ -39,7 +39,7 @@ bash "$HERE/build-gcc-2.7.2-kmc.sh" "$WORK/mips-gcc-2.7.2" "$OUT/stage-gcc-2.7.2
 tar -czf "$OUT/gcc-2.7.2-kmc-aarch64.tar.gz" -C "$OUT/stage-gcc-2.7.2-kmc" .
 
 # --------------------------------------------------------------- PS1: GCC 2.7.2 / 2.8.1
-bash "$HERE/build-gcc-2.7.2-psx.sh" "$WORK/old-gcc" "$OUT/stage-gcc-2.7.2-psx"
+GCC_C_FALLBACK="$WORK/mips-gcc-2.7.2/gcc.c" bash "$HERE/build-gcc-2.7.2-psx.sh" "$WORK/old-gcc" "$OUT/stage-gcc-2.7.2-psx"
 tar -czf "$OUT/gcc-2.7.2-psx-aarch64.tar.gz" -C "$OUT/stage-gcc-2.7.2-psx" .
 
 bash "$HERE/build-gcc-2.8.1-psx.sh" "$WORK/old-gcc" "$OUT/stage-gcc-2.8.1-psx"
