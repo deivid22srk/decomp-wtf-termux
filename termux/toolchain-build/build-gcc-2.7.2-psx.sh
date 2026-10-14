@@ -38,7 +38,7 @@ HOST_TRIPLE=aarch64-unknown-linux
 [ "$(uname -m)" = "x86_64" ] && HOST_TRIPLE=x86_64-unknown-linux
 
 export CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 \
- -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion"
+ -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion -DHAVE_STRERROR"
 ./configure \
   --target=mips-sony-psx \
   --prefix="$OUT" \
@@ -51,7 +51,7 @@ export CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_
   --build=$HOST_TRIPLE
 unset CFLAGS
 
-make --jobs "$JOBS" cpp cc1 xgcc cc1plus g++ CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion"
+make --jobs "$JOBS" cpp cc1 xgcc cc1plus g++ CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion -DHAVE_STRERROR"
 
 # upstream's own smoke tests (must pass on any host: this is mipsel codegen)
 ./cc1 -quiet -O2 "$OLDGCC/tests/little_endian.c" && grep -E 'lbu\s\$2,0\(\$4\)' little_endian.s
