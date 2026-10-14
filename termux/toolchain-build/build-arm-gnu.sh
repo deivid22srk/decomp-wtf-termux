@@ -49,5 +49,5 @@ echo "arm-none-eabi-cpp shim: no host preprocessor found" >&2
 exit 1
 EOF
 chmod +x "$OUT/arm-gnu-aarch64/bin/"*
-strip "$OUT/arm-gnu-aarch64/bin/"arm-none-eabi-{as,ld,ar,ranlib,strip,objdump,readelf,nm,objcopy,c++filt,size,strings,elfedit} 2>/dev/null || true
+for f in "$OUT/arm-gnu-aarch64/bin/"arm-none-eabi-*; do strip "$f" 2>/dev/null || true; done
 echo "arm-gnu packaged in $OUT/arm-gnu-aarch64"

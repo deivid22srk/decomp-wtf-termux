@@ -15,7 +15,8 @@ mkdir -p "$WORK" "$OUT"
 cd "$WORK"
 
 JOBS=$(nproc)
-echo "== building aarch64 toolchains with $JOBS jobs =="
+echo "== building aarch64 toolchains with $JOBS jobs ==="
+df -h / | tail -1
 S=/data/data/com.termux/files/usr/bin/sh   # shims in release tarballs target Termux
 
 # --------------------------------------------------------------- sources
@@ -31,39 +32,69 @@ if [ ! -d binutils-2.42 ]; then
 fi
 
 # --------------------------------------------------------------- N64 + PS1 shared assembler
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-binutils-2.6.sh" "$WORK/mips-binutils-2.6" "$OUT/stage-binutils-2.6"
 tar -czf "$OUT/binutils-2.6-aarch64.tar.gz" -C "$OUT/stage-binutils-2.6" .
 
 # --------------------------------------------------------------- N64: KMC GCC 2.7.2
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-gcc-2.7.2-kmc.sh" "$WORK/mips-gcc-2.7.2" "$OUT/stage-gcc-2.7.2-kmc"
 tar -czf "$OUT/gcc-2.7.2-kmc-aarch64.tar.gz" -C "$OUT/stage-gcc-2.7.2-kmc" .
 
 # --------------------------------------------------------------- PS1: GCC 2.7.2 / 2.8.1
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 GCC_C_FALLBACK="$WORK/mips-gcc-2.7.2/gcc.c" bash "$HERE/build-gcc-2.7.2-psx.sh" "$WORK/old-gcc" "$OUT/stage-gcc-2.7.2-psx"
 tar -czf "$OUT/gcc-2.7.2-psx-aarch64.tar.gz" -C "$OUT/stage-gcc-2.7.2-psx" .
 
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-gcc-2.8.1-psx.sh" "$WORK/old-gcc" "$OUT/stage-gcc-2.8.1-psx"
 tar -czf "$OUT/gcc-2.8.1-psx-aarch64.tar.gz" -C "$OUT/stage-gcc-2.8.1-psx" .
 
 # --------------------------------------------------------------- N64: IDO 5.3 / 7.1
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-ido.sh" "$WORK/ido-static-recomp" 7.1 "$OUT/stage-ido-7.1"
 tar -czf "$OUT/ido-7.1-recomp-aarch64.tar.gz" -C "$OUT/stage-ido-7.1" .
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-ido.sh" "$WORK/ido-static-recomp" 5.3 "$OUT/stage-ido-5.3"
 tar -czf "$OUT/ido-5.3-recomp-aarch64.tar.gz" -C "$OUT/stage-ido-5.3" .
 
 # --------------------------------------------------------------- arm-none-eabi binutils (GBA/DS)
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 ARM_CPP_SHBANG=$S bash "$HERE/build-arm-gnu.sh" "$WORK/binutils-2.42" "$OUT/stage-arm-gnu"
 tar -czf "$OUT/arm-gnu-aarch64.tar.gz" -C "$OUT/stage-arm-gnu" arm-gnu-aarch64
 
 # --------------------------------------------------------------- GBA: agbcc (needs arm as first)
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-agbcc.sh" "$WORK/agbcc" "$OUT/stage-agbcc" "$OUT/stage-arm-gnu/arm-gnu-aarch64/bin"
 tar -czf "$OUT/agbcc-aarch64.tar.gz" -C "$OUT/stage-agbcc" .
 
 # --------------------------------------------------------------- GC/Wii: powerpc-eabi binutils
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-gc-wii-binutils.sh" "$WORK/binutils-2.42" "$OUT/stage-gcwii"
 (cd "$OUT/stage-gcwii" && zip -q -r "$OUT/gc-wii-binutils-aarch64.zip" .)
 
 # --------------------------------------------------------------- modern MIPS binutils (maspsx flows)
+df -h / | tail -1
+clean_builds() { rm -rf "$PWD"/.build-* 2>/dev/null || true; }
+clean_builds
 bash "$HERE/build-binutils-mips.sh" "$WORK/bmips-src" "$OUT/stage-bmips"
 tar -czf "$OUT/binutils-mips-aarch64.tar.gz" -C "$OUT/stage-bmips" .
 
