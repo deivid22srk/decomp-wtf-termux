@@ -19,16 +19,23 @@ sub = root / "config.sub"
 s = sub.read_text()
 if "aarch64" not in s:
     patterns = [
-        # gcc 2.7.2/2.8.1 era: "vax-* | tahoe-* | ..." list
+        # gcc 2.7.2 era: "vax-* | tahoe-* | i[345]86-* | ..." list
         (r"(\tvax-\* \| tahoe-\* \| i\[345\]86-\* \| i860-\* \| m68k-\* \| m68000-\* \| m88k-\* \\)",
          r"\1\n\t      | aarch64-* | x86_64-* \\"),
+        # gcc 2.8.1 era: bare-CPU list ends with "| sparc | ... | v850)"
+        (r"(\t\t\| sparc \| sparclet \| sparclite \| sparc64 \| v850\))",
+         r"\t\t| aarch64 | x86_64 \\\n\1"),
+        # gcc 2.8.1 era: CPU-with-company list ends with "| f301-*)"
+        (r"(\t      \| f301-\*\))",
+         r"\t      | aarch64-* | x86_64-* \\\n\1"),
     ]
+    changed = False
     for pat, rep in patterns:
         s2 = re.sub(pat, rep, s, count=1)
         if s2 != s:
             s = s2
-            break
-    else:
+            changed = True
+    if not changed:
         sys.exit(f"config.sub: no known anchor found in {sub} — inspect it and extend patch-gcc-host.py")
     sub.write_text(s)
     print("config.sub: added aarch64/x86_64")
