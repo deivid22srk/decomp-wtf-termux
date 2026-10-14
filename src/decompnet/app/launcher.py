@@ -20,6 +20,8 @@ def _decomp_exe() -> str:
 
 
 def install_launcher() -> str:
+    if os.environ.get("TERMUX_VERSION") or "com.termux" in os.environ.get("PREFIX", ""):
+        return "no apps menu on Android: start decomp.wtf with the `decomp` command"
     exe = _decomp_exe()
     icon_svg = resources.files("decompnet.app").joinpath("static", "icon.svg").read_bytes()
     if sys.platform.startswith("linux"):

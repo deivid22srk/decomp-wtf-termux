@@ -70,6 +70,11 @@ class CompileResult:
     log: str
 
 
+def _termux() -> bool:
+    """Running under Termux (Android): no bubblewrap, no prlimit; a shell ulimit is the fallback cap."""
+    return "com.termux" in os.environ.get("PREFIX", "") or bool(os.environ.get("TERMUX_VERSION"))
+
+
 def _sandbox_mode(cfg: CompilerConfig) -> str:
     if cfg.wsl:
         return "wsl"
@@ -88,6 +93,14 @@ def _wrap(cfg: CompilerConfig, work: Path, argv: list[str]) -> list[str]:
     mode = _sandbox_mode(cfg)
     if mode in ("none", "bwrap") and shutil.which("prlimit"):
         argv = ["prlimit", *LIMITS, "--", *argv]
+    elif mode == "none" and _termux() and shutil.which("sh"):
+        # Termux has no prlimit and Android kills memory hogs taking the whole device with them:
+        # apply the same caps through the shell's ulimit (address space and file size; CPU is
+        # already bounded by the compile timeout). DECOMP_NO_ULIMIT opts out for debugging.
+        if not os.environ.get("DECOMP_NO_ULIMIT"):
+            as_kb, fsize = LIMITS[0].split("=")[1], LIMITS[2].split("=")[1]
+            argv = [os.environ.get("SHELL") or shutil.which("sh"), "-c",
+                    f'ulimit -v {as_kb} 2>/dev/null; ulimit -f {fsize} 2>/dev/null; exec "$@"', "sh", *argv]
     if mode == "none":
         return argv
     if mode == "docker":

@@ -7,7 +7,9 @@ import json
 import os
 import re
 import secrets
+import shutil
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -89,10 +91,22 @@ def _open_when_ready(url: str, port: int) -> None:
     def wait():
         for _ in range(100):
             if _alive(port):
-                webbrowser.open(url)
+                _open_url(url)
                 return
             time.sleep(0.2)
     threading.Thread(target=wait, daemon=True).start()
+
+
+def _open_url(url: str) -> None:
+    """Open the browser; on Termux that's termux-open-url / termux-open (Android has no xdg-open)."""
+    if "com.termux" in os.environ.get("PREFIX", "") or os.environ.get("TERMUX_VERSION"):
+        for opener in ("termux-open-url", "termux-open"):
+            exe = shutil.which(opener)
+            if exe:
+                subprocess.Popen([exe, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+        print("install Termux:API (pkg install termux-api + the Termux:API app) to open the link automatically")
+    webbrowser.open(url)
 
 
 def run(args) -> int:
@@ -112,7 +126,7 @@ def run(args) -> int:
         url = f"http://127.0.0.1:{prev['port']}/?k={prev['secret']}"
         print(f"decomp.wtf is already running: {url}")
         if not args.no_browser:
-            webbrowser.open(url)
+            _open_url(url)
         return 0
 
     sock = _listen(args.port)
