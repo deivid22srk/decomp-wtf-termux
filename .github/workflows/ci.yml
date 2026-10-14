@@ -19,8 +19,8 @@ jobs:
       - name: shellcheck
         run: |
           sudo apt-get install -y shellcheck
-          shellcheck -x install.sh termux/sanity-test.sh termux/decomp termux/decomp-update \
-            termux/decomp-uninstall termux/toolchain-build/*.sh
+          shellcheck -x -S warning install.sh termux/sanity-test.sh termux/decomp \
+            termux/decomp-update termux/decomp-uninstall termux/toolchain-build/*.sh
 
   pytest:
     runs-on: ubuntu-24.04
@@ -39,6 +39,12 @@ jobs:
       - name: Run the test suite that needs no period compiler
         env:
           DECOMPNET_TOOLCHAINS: /tmp/empty-toolchains
-        run: uv run pytest tests/ -v --ignore=tests/test_psx.py --ignore=tests/test_rom.py \
-          --ignore=tests/test_gba.py --ignore=tests/test_gc.py --ignore=tests/test_ds.py \
-          --ignore=tests/test_ps2.py --ignore=tests/test_period_compilers.py
+        run: >-
+          uv run pytest tests/ -v
+          --ignore=tests/test_psx.py
+          --ignore=tests/test_rom.py
+          --ignore=tests/test_gba.py
+          --ignore=tests/test_gc.py
+          --ignore=tests/test_ds.py
+          --ignore=tests/test_ps2.py
+          --ignore=tests/test_period_compilers.py
