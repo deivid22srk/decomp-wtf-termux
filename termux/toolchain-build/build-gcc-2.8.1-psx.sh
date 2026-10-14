@@ -18,6 +18,7 @@ fi
 rm -rf "$BUILD" && mkdir -p "$BUILD" && cd "$BUILD"
 tar xzf "$CACHE/gcc-2.8.1.tar.gz"
 cd gcc-2.8.1
+chmod -R u+w .   # the GNU tarball extracts read-only
 
 # --- decompals/old-gcc recipe (gcc-2.8.1-psx.Dockerfile), verbatim order ---
 sed -i -- 's/include <varargs.h>/include <stdarg.h>/g' *.c
