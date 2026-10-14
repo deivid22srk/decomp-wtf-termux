@@ -1,0 +1,28 @@
+diff -ruN a/config.sub b/config.sub
+--- a/config.sub	2026-10-14 19:01:57.106525992 +0000
++++ b/config.sub	2026-10-14 19:39:38.787621178 +0000
+@@ -145,6 +145,7 @@
+ 		;;
+ 	# Recognize the basic CPU types with company name.
+ 	vax-* | tahoe-* | i[345]86-* | i860-* | m68k-* | m68000-* | m88k-* \
++	      | aarch64-* | x86_64-* \
+ 	      | sparc-* | ns32k-* | fx80-* | arm-* | c[123]* \
+ 	      | mips-* | pyramid-* | tron-* | a29k-* | romp-* | rs6000-* | power-* \
+ 	      | none-* | 580-* | cray2-* | h8300-* | i960-* | xmp-* | ymp-* \
+diff -ruN a/configure b/configure
+--- a/configure	2026-10-14 19:01:57.144526260 +0000
++++ b/configure	2026-10-14 19:39:38.788621185 +0000
+@@ -990,6 +990,13 @@
+ 		install_headers_dir=install-headers-cpio
+ 		broken_install=yes
+ 		;;
++	aarch64-*-linux* | x86_64-*-linux*)	# 64-bit ARM / x86-64 Linux (Termux port)
++		xm_file=i386/xm-linux.h
++		xmake_file=x-linux
++		fixincludes=Makefile.in #On Linux, the headers are ok already.
++		broken_install=yes
++		gnu_ld=yes
++		;;
+ 	i[345]86-*-linux*oldld*)	# Intel 80386's running Linux
+ 		cpu_type=i386		# with a.out format using pre BFD linkers
+ 		xm_file=i386/xm-linux.h
