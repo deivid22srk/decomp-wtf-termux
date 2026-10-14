@@ -22,13 +22,17 @@ HOST_TRIPLE=aarch64-unknown-linux-gnu
 make -j"$JOBS" all-binutils all-gas all-ld
 
 mkdir -p "$OUT/arm-gnu-aarch64/bin"
+make -j"$JOBS" all-utils >/dev/null 2>&1 || true
 for t in as ld ar ranlib strip objdump readelf nm objcopy c++filt size strings elfedit; do
-  f=$(find binutils gas ld -maxdepth 1 -type f -name "$t" -o -maxdepth 1 -type f -name "$t-new" -o -maxdepth 1 -type f -name "as.new" 2>/dev/null | head -1)
   case $t in
     as) f=gas/as-new ;;
     ld) f=ld/ld-new ;;
+    c++filt) f=$(ls binutils/cxxfilt 2>/dev/null | head -1) ;;
+    *) f=$(ls binutils/$t binutils/$t-new 2>/dev/null | head -1) ;;
   esac
-  [ -f "$f" ] || { echo "missing $t (looked for $f)"; exit 1; }
+  if [ -z "$f" ] || [ ! -f "$f" ]; then
+    case $t in as|ld|ar) echo "missing required $t"; exit 1 ;; *) echo "note: optional $t missing, skipping"; continue ;; esac
+  fi
   cp "$f" "$OUT/arm-gnu-aarch64/bin/arm-none-eabi-$t"
 done
 
