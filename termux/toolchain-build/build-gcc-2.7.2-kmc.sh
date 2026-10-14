@@ -20,7 +20,9 @@ export CFLAGS="-O2 -static -std=gnu89 -fno-stack-protector -U_FORTIFY_SOURCE -D_
 unset CFLAGS
 
 # c-parse.c is pre-generated in the repo; touch it so bison never runs (modern bison chokes on 1995 grammar)
-touch c-parse.c
+# the pre-generated parsers must stay newer than their .y sources (modern bison
+# can't read 1995 grammars): git clone gives every file the same mtime
+touch c-parse.c cp/parse.c cp/parse.h
 CF="-O2 -static -std=gnu89 -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion -DHAVE_STRERROR"
 make -j"$JOBS" CFLAGS="$CF" xgcc cc1 cc1plus cpp cccp g++
 

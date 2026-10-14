@@ -54,6 +54,9 @@ export CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_
   --build=$HOST_TRIPLE
 unset CFLAGS
 
+# pre-generated parsers must stay newer than their .y sources (git clone gives
+# every file the same mtime, and modern bison can't read 1995 grammars)
+touch c-parse.c cp/parse.c cp/parse.h 2>/dev/null || true
 make --jobs "$JOBS" cpp cc1 xgcc cc1plus g++ CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion -DHAVE_STRERROR"
 
 # upstream's own smoke tests (must pass on any host: this is mipsel codegen)
