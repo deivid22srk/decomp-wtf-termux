@@ -1,365 +1,122 @@
-<p align="center">
-  <a href="https://decomp.wtf">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.png">
-      <img alt="decomp.wtf: What the function? Your AI agent decompiles games you own into C that compiles to the exact same bytes." src=".github/assets/banner-light.png">
-    </picture>
-  </a>
-</p>
+# decomp.wtf para Termux
 
-<p align="center">
-  <a href="https://decomp.wtf"><b>Website</b></a>
-  &nbsp;·&nbsp;
-  <a href="#install"><b>Install</b></a>
-  &nbsp;·&nbsp;
-  <a href="#how-it-works"><b>How it works</b></a>
-  &nbsp;·&nbsp;
-  <a href="#continue-a-public-decomp"><b>Public decomps</b></a>
-  &nbsp;·&nbsp;
-  <a href="#agents"><b>Agents</b></a>
-  &nbsp;·&nbsp;
-  <a href="#decompile-together"><b>Decompile together</b></a>
-</p>
+**Port não oficial do [decomp.wtf](https://github.com/i12bp8/decomp.wtf) para Termux (Android, aarch64, sem root)** — com os **compiladores de época** que o julgamento byte a byte exige, em especial o do **PlayStation 1**.
 
-<p align="center">
-  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-157a49?style=flat-square"></a>
-  <img alt="Linux and Windows" src="https://img.shields.io/badge/platform-Linux%20%7C%20Windows-15140f?style=flat-square">
-  <img alt="Python 3.12 or newer" src="https://img.shields.io/badge/python-3.12%2B-15140f?style=flat-square">
-  <img alt="Works with any MCP agent" src="https://img.shields.io/badge/agents-any%20MCP%20client-157a49?style=flat-square">
-</p>
+> decomp.wtf (What The Function) é um app local, open source (MIT), onde seu agente de IA decompila jogos que você possui em C que **compila exatamente para os mesmos bytes**, com visualização ao vivo. Este port traz tudo isso para o celular, incluindo compiladores originais dos anos 90/2000 reconstruídos para ARM64.
+>
+> Todo o crédito da ferramenta original é de [sam wolfs (i12bp8)](https://github.com/i12bp8) e da comunidade de decompilação. Este repositório mantém a licença **MIT** e o [`LICENSE`](LICENSE) original; as mudanças do port estão listadas [abaixo](#o-que-mudou-em-relação-ao-upstream).
 
-<br>
+---
 
-<p align="center">
-  <img alt="decomp.wtf at work: agents claim functions, their compile attempts drop to score 0, and the map of the game turns green." src=".github/assets/demo.webp" width="900">
-  <br>
-  <sub>The simulation from <a href="https://decomp.wtf">decomp.wtf</a>, on the demo ROM that ships with the app.</sub>
-</p>
+## Instalação
 
-<br>
-
-Point the AI agent you already use at a game you own. **decomp.wtf** hands it the game one function at a time,
-compiles every attempt with the game's **original compiler**, and checks the result **byte for byte**. Score 0, or
-it doesn't count. There are two ways in:
-
-- **Start from scratch.** Drop in a game for N64, PlayStation 1 or 2, GameCube, Wii, Game Boy Advance or DS: a
-  ROM, a disc image or the program file. decomp.wtf finds every function and your agents take it from there. The
-  result is a project that rebuilds your game byte for byte: the base for ports and mods.
-- **Continue a public decomp.** Pick one of the [245 projects on decomp.dev](https://decomp.dev) for GameCube, Wii,
-  PlayStation 1 and 2, N64, GBA, DS, Switch, PC, Xbox 360 and more, add your own copy of its game, and your agents
-  carry on where the community left off, in the project's real source code.
-
-On GameCube and Wii the goal is what real decomps aim for: every file **linked**, so the game is built from its C and
-still comes out byte for byte. That's the starting point for a native PC port.
-
-Everything runs on your computer. No account, no telemetry, nothing uploaded.
-
-## Install
-
-decomp.wtf runs on **Linux** and **Windows**.
-
-**Linux**
-
-```
-curl -fsSL https://decomp.wtf/install.sh | bash
-```
-
-**Windows** (PowerShell)
-
-```
-irm https://decomp.wtf/install.ps1 | iex
-```
-
-**macOS: coming later.** I don't have a Mac to test on, and rather than ship something that half works, macOS
-support comes once it's been tested properly.
-
-One line sets up everything: [uv](https://docs.astral.sh/uv/), the app, the period compilers (pinned and
-checksum-verified) and the m2c draft decompiler. It then adds **decomp.wtf** to your apps and opens it in your
-browser. After that, start it any time from your apps menu (the Start menu on Windows) or by typing `decomp` in a
-terminal. Remove it any time with `uv tool uninstall decompnet`.
-
-> [!TIP]
-> No ROM at hand? The app ships with **Demo Quest 64**, a real N64 ROM built from public-domain code and zlib.
-> Open it from the home screen and watch your agent go.
-
-## Or just ask your agent
-
-Already living in Claude Code, Codex, Antigravity CLI or opencode? Give it decomp.wtf's tools once:
-
-```
-decomp connect
-```
-
-Then ask it, in your own terminal:
-
-> decompile my game at ~/roms/game.z64
-
-It confirms the game is your own copy, imports it, opens the live view so you can watch, and gets to work with every
-tool decomp.wtf has: the original compiler, the byte-for-byte judge, the autopilot, helper agents running in
-parallel (`start_agents`) and the rebuildable export. Behind it is `decomp mcp`, an MCP server that starts the app
-when needed; you can also add it yourself (`claude mcp add decomp -- decomp mcp`).
-
-| Agent | Install it as a package instead |
-| :-- | :-- |
-| **Claude Code** | `/plugin marketplace add i12bp8/decomp.wtf`, then `/plugin install decomp-wtf@decomp-wtf` (adds a "decompile" skill) |
-| **Codex, Antigravity CLI, opencode** | `decomp connect codex`, `decomp connect antigravity`, `decomp connect opencode` |
-
-## How it works
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/how-dark.png">
-    <img alt="Your ROM, split into every function by splat. Your agent writes C, the original compiler builds it, it's linked at its real address and compared byte for byte. If it doesn't match yet, the diff goes back to the agent." src=".github/assets/how-light.png">
-  </picture>
-</p>
-
-1. **Open a ROM.** splat and spimdisasm find every function and data symbol, and decomp.wtf recognises the
-   compiler that built the game.
-2. **Add agents.** Each claims a different function and gets its assembly, the data it touches, who calls it, a
-   machine-made first draft and notes from earlier attempts.
-3. **Watch them match.** Every attempt is compiled, *linked* at the function's real address and compared with the
-   ROM. A miss returns an instruction diff; a hit is saved, named and shared with every other agent.
-
-<details>
-<summary><b>What a match looks like</b></summary>
-<br>
-
-The assembly decomp.wtf takes from the ROM:
-
-```asm
-800007D0  slt     $v0, $a0, $a1
-800007D4  bnez    $v0, .L800007EC
-800007D8   addu   $v0, $a1, $zero
-800007DC  addu    $v0, $a2, $zero
-800007E0  slt     $v1, $v0, $a0
-800007E4  beql    $v1, $zero, .L800007EC
-800007E8   addu   $v0, $a0, $zero
-.L800007EC:
-800007EC  jr      $ra
-800007F0   nop
-```
-
-The C an agent wrote, which compiles to exactly those bytes with KMC GCC 2.7.2 at `-O2`:
-
-```c
-s32 clamp_s32(s32 v, s32 lo, s32 hi) {
-    if (v < lo) {
-        return lo;
-    }
-    if (v > hi) {
-        return hi;
-    }
-    return v;
-}
-```
-
-</details>
-
-## Continue a public decomp
-
-Most games people decompile already have a community project with its build set up and part of the code done.
-decomp.wtf plugs your agents into them as they are:
-
-1. **Browse** the decomp.dev catalog in the app (or paste any decomp repository's address) and **fork** it: it's
-   cloned to your computer on a local `decomp-wtf` branch.
-2. **Add your copy of the game.** The app knows where common project layouts expect it (dtk-template for
-   GameCube/Wii, configure.py + ninja, splat + make) and runs the project's own setup. Anything else you set up
-   by its README, and decomp.wtf picks it up once it builds.
-3. **Add agents.** Each claims a function and gets the target assembly, objdiff's diff, the function's source
-   file, matched look-alikes and a machine draft. Its code goes into the real source file, the project's build
-   compiles it with the project's compilers, and [objdiff](https://github.com/encounter/objdiff) judges it.
-4. **Every match is a git commit** on `decomp-wtf`, ready for you to review and, if the project welcomes it, send
-   upstream. Nothing is sent anywhere by itself.
-
-Guard rails, learned from people who ran agents on decomps before: agents write only C/C++ sources and headers,
-never targets, assembly or build scripts, and inline assembly is refused. A change that breaks any function that
-already matched is undone. The project's file layout (which code belongs to which source file) and which files are
-linked are changed by decomp.wtf itself, never typed by an agent, and kept only when the game still builds byte for
-byte.
-
-### From matched to linked
-
-A function at 100% is matched. A file is **linked** when all of it, functions *and* data, matches: the project then
-builds the game from that C instead of from the original's code, and checks the whole game against its checksum.
-That's decomp.dev's "linked" measure, and it's what a decomp needs before the C can become a port. For
-GameCube and Wii projects (dtk-template) decomp.wtf takes care of the steps between:
-
-- **Every function gets a source file.** Most projects still have code no file covers: in Mario Party 6, 17,923
-  functions. **Give them source files** gives each stretch of that code a file of its own (starting agents does it too),
-  and `split_file` divides one where the game's original files divided.
-- **Files closest to done come first.** When a match finishes a file's functions, the agent is shown the file's data
-  next to the original's, with what to fix (a table that should be `const`, a static that belongs inside a
-  function). `file_status` shows it any time.
-- **Finished files link themselves.** decomp.wtf marks the file Matching, builds the game and runs the project's
-  checksum check, and keeps the change only if it passes. A linked file can't be changed in a way that alters the
-  game. The app shows **% linked** next to % matched.
-
-## Features
-
-| Feature | What you get |
-| :-- | :-- |
-| **Live view** | A map of every function in the game, each agent's tool calls, scores falling to zero, all in real time. |
-| **Autopilot** | Every function's machine draft goes through the judge first: whatever already matches costs no agent time (a fifth of the demo games in seconds). |
-| **Your agent, your terminal** | `decomp connect`, then ask Claude Code, Codex or Antigravity CLI to decompile your game: it imports, opens the live view and works. |
-| **Edit it yourself** | Every function has an editor: write C, press Ctrl+Enter, see the judge's diff. You count as an agent. |
-| **Byte-for-byte check** | Candidates are linked at the real address, so calls, globals, strings and jump tables are verified too. |
-| **Any agent** | Claude Code, Codex, Antigravity CLI, opencode, or any model with an API key, several at once. |
-| **Lean context** | Compact assembly, diffs that say what's wrong before showing where, close look-alikes' C up front, and short sessions: fewer tokens per match, and models stay sharp. |
-| **Shared knowledge** | Structs and prototypes go into one header, accepted only if every match so far still matches. |
-| **Safe renames** | Matching works by address, so naming functions and data can never break a match. |
-| **Public decomps** | Fork any of 245 community projects from decomp.dev and keep going with your agents, judged by objdiff. |
-| **Linked, like real decomps** | GameCube and Wii files link into the game as soon as all of their code and data match, checked against the game's checksum. |
-| **A file for every function** | Code no source file covers gets one, and agents divide files where the originals did, verified the same way. |
-| **Look-alikes** | `find_similar` spots copy-pasted and inlined code across the whole game and starts agents from what already matches. |
-| **Drafts** | m2c for MIPS, PowerPC and ARM; optional Ghidra for x86, AArch64 and everything else. |
-| **Agent toolkit** | A data inspector, a call graph, splitting merged functions, and guides for MIPS, PowerPC, ARM, x86, AArch64, IDO, GCC, Metrowerks, agbcc, PSY-Q, C++ and objdiff. |
-| **Decompile together** | A team of any size, each with their own copy and agents: one host, public or private rooms, hosted by you (home PC or server, `decomp host`). Only the work is shared, never the game. |
-| **Rebuildable export** | A decomp project that rebuilds your game byte for byte, ready for ports and mods and for any other tool or agent. |
-| **Every major disc format** | ROMs, PlayStation discs, GameCube and Wii discs (ISO, GCM, RVZ, WIA, WBFS, CISO, GCZ) and program files, streamed from disk. |
-
-## Agents
-
-| Agent | How it connects |
-| :-- | :-- |
-| **Claude Code** | Runs headless against the app's local MCP server. |
-| **Codex CLI** | Same, with approvals limited to decomp.wtf's tools. |
-| **Antigravity CLI** | Same, through the workspace's own MCP config. Google's successor to Gemini CLI (`agy`), which it retired in June 2026. |
-| **opencode** | Same, with any provider you've set up: DeepSeek, Qwen, Kimi and more. |
-| **API key** | A built-in agent loop for any OpenAI-compatible API: DeepSeek, OpenRouter, Ollama, LM Studio. |
-| **The agent you talk to** | `decomp connect` (or the Claude Code plugin above): it drives decomp.wtf from your own terminal and can start helpers. |
-| **Anything else** | Point any MCP client (Cursor, Claude Desktop, your own) at `decomp mcp`, or at the app with **Connect another agent**. |
-
-Agents only get decomp.wtf's tools: no shell, and no access to your files beyond a fork's own source tree. The app installs missing agents for you
-and tells you how to sign in. You pay your own provider; in our tests a small function cost Claude Code about 8 cents.
-Big functions take many more attempts, and cheaper models often get stuck on them on register allocation, so expect
-the easy part of a game to go fast and the rest to take real time.
-
-## Decompile together
-
-A whole team, any size, each on their own computer with their own copy of the game and their own agents, working on
-one game. One computer is the room's **host**: it hands out functions so nobody does the same one twice, checks every
-match against its own copy, and shares names, structs and notes with everyone. Nothing goes through decomp.wtf's
-website: the people who decompile together host their room and decide who's in.
-
-**On a home PC:** open the project, click **Decompile together**, **Start sharing**. Send the link.
-
-**On a server** (or any always-on machine):
-
-```
-curl -fsSL https://decomp.wtf/install.sh | bash
-decomp host mygame.z64 --own-copy --address http://my-server:6481 --service
-```
-
-That runs decomp.wtf in the background (starting with the computer), imports your copy, opens the room and prints the
-link. **Joining:** paste the link into **Join a team's room** in the app, or `decomp join <link> <your copy> --name you`.
-
-| | |
-| :-- | :-- |
-| **Private or public** | Private rooms need the invite link; public rooms only the address. Optionally approve each new member. |
-| **Your address** | A free Cloudflare quick tunnel with nothing to set up, or an address you control: your LAN, Tailscale, a server. Rooms at your own address reopen with the same link after a restart. |
-| **The host's controls** | Who's online and on what, remove members, a fresh invite link, stop sharing. |
-| **Light on the host** | Members compile their own attempts; the host compiles only to verify matches. Agents wait while the host is away and carry on when it's back. |
-
-No ROM bytes or assembly ever cross the wire: everyone reads the code from their own copy, which must be identical to
-the host's. The decompiled code of a commercial game belongs to its rights holder: share it only with people who own
-the game. Rooms work for games started from a ROM; GameCube, Wii and DS projects are git repositories, which a team
-shares like any other (GitHub, GitLab, its own server).
-
-## Platforms
-
-| Platform | From scratch | Compilers | Rebuildable project | Public decomps |
-| :-- | :-- | :-- | :-- | :-- |
-| **Nintendo 64** | ✓ ROM | KMC GCC 2.7.2 · IDO 5.3 / 7.1 | ✓ export | ✓ |
-| **PlayStation** | ✓ disc or EXE | GCC 2.7.2 / 2.8.1 (PSY-Q era) | ✓ export | ✓ |
-| **PlayStation 2** | ✓ disc or ELF | EE-GCC 2.96 | ✓ export | ✓ |
-| **GameCube · Wii** | ✓ disc (ISO, RVZ, WBFS…) or DOL | CodeWarrior GC 1.0 – Wii 1.7 | ✓ dtk-template | ✓ |
-| **Game Boy Advance** | ✓ ROM | agbcc | ✓ export | ✓ |
-| **Nintendo DS** | ✓ ROM (.nds) | CodeWarrior for DS 1.2 – DSi 1.6 | ✓ ds-decomp | ✓ |
-| **3DS · PSP · Switch · PC · Xbox · Xbox 360** | coming | | | ✓ |
-
-**From scratch.** splat and spimdisasm split MIPS games, decomp-toolkit analyses GameCube and Wii programs inside a
-generated [dtk-template](https://github.com/encounter/dtk-template) project, [ds-decomp](https://github.com/AetiasHax/ds-decomp)
-analyses DS ROMs (ARM9, ITCM, DTCM, overlays) inside a generated project of the same kind, and Game Boy Advance
-ROMs are split by [luvdis](https://github.com/aarant/luvdis) plus decomp.wtf's own pass for code nothing calls. Every attempt is
-compiled with the game's compiler and checked byte for byte: linked at its address in the original (MIPS, ARM)
-or judged by objdiff inside the project's own build (GameCube, Wii, DS).
-
-**The base for ports and mods.** *Export project* writes a normal decomp tree (matched functions as C, the rest as
-assembly from splat or luvdis, a linker script and `build.py`) and proves it rebuilds your game byte for byte.
-GameCube and Wii projects are dtk-template projects and DS projects are ds-decomp projects; both rebuild the game on
-every build, and GameCube and Wii files are linked as they're finished. Game code and data stay out of git: they're regenerated from your own copy, so the tree can be shared
-and continued with any tool or agent.
-
-**C and C++.** GameCube, Wii and DS games are often C++, and decomp.wtf handles it there: code with C++ symbol
-names goes into `.cpp` files, drafts come out as C++, and agents get a guide to classes, vtables, constructors,
-inlines and name mangling. On N64, PlayStation, PS2 and GBA, functions started from scratch are written in C for
-now; C++ there (mostly PS2 games) is coming. Public decomps use whatever language the project does.
-
-**Proprietary compilers** (IDO, CodeWarrior, CodeWarrior for DS) are only installed after you accept that. Heavy
-tools run with a memory cap, so a runaway analysis can't take your computer down.
-
-**Windows and the Linux-only compilers.** KMC GCC (N64), the PlayStation GCCs, EE-GCC (PS2) and agbcc (GBA) only
-exist as Linux programs. On Linux the app runs them in a sandbox; on Windows it runs them inside
-[WSL 2](https://learn.microsoft.com/windows/wsl/install), which takes a one-time setup: `wsl --install` in an
-administrator PowerShell, then restart. decomp.wtf installs and runs the compilers in it by itself, and the results
-are byte-identical to Linux. Everything else (IDO, CodeWarrior, objdiff, the GUI) runs natively on Windows.
-
-## Development
+Um único comando, dentro do Termux:
 
 ```bash
-uv sync
-uv run decomp              # opens the app; projects live in ~/Decomp (or $DECOMP_HOME)
-uv run pytest
+curl -fsSL https://raw.githubusercontent.com/deivid22srk/decomp-wtf-termux/main/install.sh | bash
 ```
 
-<details>
-<summary><b>Repository layout</b></summary>
-<br>
+O que ele faz: instala os pacotes necessários, o decomp.wtf (via `uv`), os compiladores de época com build aarch64 (PS1 primeiro), os comandos `decomp`/`decomp-update`/`decomp-uninstall` e roda um **teste de sanidade** que prova que o compilador do PS1 reproduz a demo **byte a byte**. IDO (proprietário) só entra se você aceitar a licença (`--with-ido` ou depois, dentro do app em *Setup*).
 
-| Path | What it is |
-| :-- | :-- |
-| `src/decompnet/rom/` | ROM reading (`n64.py`, `psx.py`), splitting with splat (`split.py`), the symbol table and the matcher (`match.py`). |
-| `src/decompnet/app/` | The app: `engine.py` (ROM projects), `forkengine.py` (forks of public decomps), `tools.py` (MCP tools and agent prompt), `agents.py` (running agents), `server.py` (GUI API and MCP), `collab.py` (rooms), `static/` (GUI), `guide/` (agent know-how). |
-| `src/decompnet/forks/` | Fork mode: the decomp.dev catalog, project detection and setup, objdiff, source editing, m2c and Ghidra drafts, linking and file splits for dtk-template projects (`project.py`, `dtksplits.py`), and data diffs (`datadiff.py`). |
-| `src/decompnet/network.py` | The coordination core the engine builds on: claims, attempts, notes, the shared header. |
-| `src/decompnet/toolchains.py`, `wsl.py` | The pinned compilers: verified downloads, installs, and on Windows the Linux-only ones inside WSL 2. |
-| `projects/demo-rom/` | Builds Demo Quest 64. `tests/test_rom.py` proves the matcher on it: every function of the original source matches. |
-| `projects/demo-psx/` | The same game as a PlayStation executable, for `tests/test_psx.py`. |
-| `projects/demo-fork/` | A small decomp project in the community's shape (objdiff.json, ninja), for `tests/test_forks.py`. |
-| `site/` | The website (Cloudflare Workers static assets), its simulation data (`site/tools/build_sim.py`) and legal pages. |
+Atualizar e desinstalar:
 
-Rebuild the demo ROM with `uv run python projects/demo-rom/build.py` (needs `gcc-2.7.2-kmc` and `ld.lld`).
+```bash
+decomp-update      # atualiza o port e os compiladores
+decomp-uninstall   # remove tudo (seus projetos em ~/Decomp ficam)
+```
 
-</details>
+## Requisitos
 
-## Built on
+- **Android 8.0+** com **Termux do F-Droid ou do GitHub** (a versão da Play Store é antiga e quebrada — não funciona)
+- **aarch64** (qualquer celular/arm de 64 bits dos últimos anos; `armv7` não é suportado)
+- ~**2 GB livres** (o app e os compiladores usam pouco; projetos e o Ghidra opcional podem crescer)
+- **4 GB de RAM** recomendados (2 GB funcionam para PS1/N64/GBA; compiladores pesados podem ser mortos pelo Android)
+- Um agente de IA é opcional: Claude Code, Codex CLI e opencode rodam nativamente no Termux (`decomp connect`)
 
-[splat](https://github.com/ethteck/splat) and [spimdisasm](https://github.com/Decompollaborate/spimdisasm) split
-ROMs, [objdiff](https://github.com/encounter/objdiff) judges forks, [m2c](https://github.com/matt-kempster/m2c) and
-[Ghidra](https://github.com/NationalSecurityAgency/ghidra) write first drafts, the
-[decompals](https://github.com/decompals) recompiled period compilers do the building, and
-[decomp.dev](https://decomp.dev) lists the public projects. The look-alike finder follows the idea of
-[coddog](https://github.com/ethteck/coddog); [decomp-toolkit](https://github.com/encounter/decomp-toolkit),
-[maspsx](https://github.com/mkst/maspsx) and [wibo](https://github.com/decompals/wibo) are in the pinned toolbelt
-(`decompnet toolchain install <name>`). Thanks to everyone in the decomp community whose tools and ideas made this
-possible. decomp.wtf isn't affiliated with any of these projects.
+## Compatibilidade no Termux
 
-## Use it responsibly
+| Plataforma | Estado | Compilador | Como roda |
+|---|---|---|---|
+| **PS1** | ✅ nativo | GCC 2.7.2 / 2.8.1 (estilo PSY-Q) + binutils 2.6 + maspsx | **A** — fonte compilada para aarch64 (estático); linking com `ld.lld` do Termux |
+| **N64** | ✅ nativo | KMC GCC 2.7.2 + binutils 2.6; **IDO 5.3/7.1** (proprietário) | **A** — GCC/binutils da fonte; IDO via `ido-static-recomp` |
+| **GBA** | ✅ nativo | agbcc (pret) + binutils arm-none-eabi | **A** — fonte compilada para aarch64 |
+| **GC/Wii** | ❌ não suportado | CodeWarrior (Windows) via wibo | wibo é x86_64-only e não há CodeWarrior para Linux/ARM |
+| **DS** | ❌ não suportado | mwccarm (Windows) via wibo | mesmo motivo acima; `dsd` (extração) chegou como build aarch64 no upstream |
+| **PS2** | ❌ não suportado | EE-GCC 2.96 | só existem binários i386 proprietários-modificados, sem fonte pública: impossível recompilar para aarch64 |
 
-decomp.wtf contains no game code and doesn't provide ROMs. Use games you own, don't use it to get around copy
-protection, and don't publish decompiled code of games whose rights you don't hold. When you continue a public
-decomp, follow that project's license and contribution rules; forking runs its build scripts on your computer, so
-fork projects you trust.
+Ferramentas de apoio: `m2c` (rascunho do decompilador), `maspsx`, `luvdis`, `splat`/`spimdisasm`, `objdiff-cli`, `dtk`, `cloudflared` — Python/Rust/Go com binários aarch64 nativos quando existem. `objdiff-cli`, `dtk`, `dsd` e `coddog` ainda não têm build estático aarch64 neste port ( funcionam via upstream glibc em outros Linux); sem eles, os fluxos GC/Wii/DS continuam bloqueados pelos compiladores de qualquer forma.
 
-Many community decomps don't accept AI-written contributions, and the ones that do expect a person to stand behind
-every line. decomp.wtf never sends anything upstream: your agents' work stays on your local branch. Before you open a
-pull request, read the project's CONTRIBUTING (or ask its maintainers), review the code yourself, and say how it
-was made.
+## Como os compiladores funcionam no Android
 
-## License
+O Termux roda **bionic, sem glibc e sem root**: nenhum binário x86-64 pré-compilado executa nele. O port usa três estratégias, nesta ordem:
 
-[MIT](LICENSE) © 2026 Sam Wolfs
+1. **A — Compilação nativa aarch64 (a usada por todos os ✅):** o código-fonte de cada compilador de época é compilado para aarch64 **estaticamente ligado**, com patches mínimos e documentados em `termux/toolchain-build/patches/` (o `configure` de 1995 aprende que aarch64 existe; `-fcommon`, `-std=gnu89`, K&R). O *codegen MIPS/ARM não depende da máquina do compilador*: o CI valida a cada build que os objetos são **byte a byte idênticos** aos das releases oficiais x86-64 (referências em `termux/reference/`).
+2. **B — Emulação x86 (box64/qemu):** não usada neste port — lenta em celular e ainda precisaria de glibc via proot.
+3. **C — proot-distro (Debian aarch64):** não usada; tudo roda nativo no Termux. Fica como plano B documentado para quem quiser os compiladores ❌.
 
-<br>
+O que cada um recebe:
 
-<p align="center"><sub>Not affiliated with Nintendo or Sony. Nintendo 64 and PlayStation are their trademarks.</sub></p>
+- **PS1 — GCC 2.7.2/2.8.1**: fonte vanilla do GNU + patches da comunidade (`decompals/old-gcc`) + patch de host aarch64 deste port. Ligação final com `ld.lld`/`llvm-objcopy`/`llvm-nm` (`pkg install lld llvm`), como no upstream.
+- **N64 — KMC GCC 2.7.2**: mesmo esquema (fonte pré-patcheada de `decompals/mips-gcc-2.7.2`). **IDO**: `ido-static-recomp` recompila os binários SGI para C portátil — roda em qualquer arquitetura, inclusive aarch64 (o app exige aceitação da licença antes de instalar).
+- **GBA — agbcc**: o fluxo do pret (cpp → agbcc → `arm-none-eabi-as`) com binutils arm-none-eabi construídos estaticamente (a release oficial da Arm para hosts aarch64 é glibc-dinâmica e não roda no Android); o `arm-none-eabi-cpp` é um shim sobre o pré-processador do host, porque agbcc só recebe C pré-processado.
+- **GC/Wii/DS**: `wibo` (emulador de Windows x86) não existe para aarch64 e os CodeWarrior só existem como binários Windows — ❌ honesto, sem gambiarras.
+
+## Dicas de desempenho e bateria
+
+- O comando `decomp` já segura um **wake lock**; desligar a tela não para as compilações.
+- Nas configurações do Android, desative a **otimização de bateria** para o Termux.
+- Cada compilação roda com limite de memória (ulimit) e timeout — um agente entusiasta não derruba o celular.
+- Para compilações muito longas, o **Phantom Process Killer** do Android 12+ pode matar filhos do Termux; veja a próxima seção.
+
+## Usando com agentes de IA
+
+```bash
+pkg install nodejs-lts        # se ainda não tiver
+npm install -g @anthropic-ai/claude-code   # ou: opencode / codex
+decomp                        # inicia o app e abre no navegador
+decomp connect                # conecta os agentes que detectar
+```
+
+Daí em diante é igual ao upstream: *“decompile meu jogo em ~/roms/game.z64”*. O `decomp connect` também serve para Claude Code, Codex e opencode instalados no Termux.
+
+## Solução de problemas
+
+- **"Phantom process está matando meus processos"** (Android 12+): rode no computador com adb:
+  `adb shell device_config put activity_manager max_phantom_processes 2147483647`
+  (e/ou desative a otimização de bateria do Termux). O Android recria o limite ao reiniciar.
+- **Porta ocupada** (`no free port`): o app usa a 6464 em diante; feche outra instância com `decomp stop`.
+- **Falta de espaço**: os compiladores vivem em `~/.local/share/decompnet/toolchains`; `decompnet toolchain list` mostra o que está instalado.
+- **`ld.lld: command not found`**: `pkg install lld llvm` (necessário para montar as demos PS1/N64).
+- **Compilador baixado não roda**: confirme que é Termux aarch64 (`uname -m`); builds armv7/x86 não são distribuídos.
+- **zlib 1.1.4 não baixa**: o port usa espelho alternativo fixado (o site do zlib removeu o arquivo); se ainda falhar, baixe manualmente e rode `uv run python projects/zlib-n64/prepare.py`.
+
+## Uso responsável (do projeto original)
+
+decomp.wtf existe para estudos, preservação e modificações de **jogos que você possui**. O projeto **não fornece ROMs, ISOs, BIOS** nem código de jogos comerciais, e não serve para burlar proteções. Projetos só podem ser importados com base legal declarada (código próprio, open source, homebrew ou permissão do detentor) — o app recusa o resto.
+
+---
+
+## English (short version)
+
+This is an **unofficial port of [decomp.wtf](https://github.com/i12bp8/decomp.wtf) (MIT) to Termux/Android (aarch64, no root)**, focused on the **period compilers** that byte-exact matching needs — the PlayStation 1 ones first. Install with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/deivid22srk/decomp-wtf-termux/main/install.sh | bash
+```
+
+Every compiler that ships here is **built from source for aarch64, statically linked** (Android has no glibc): PS1 GCC 2.7.2/2.8.1, N64 KMC GCC 2.7.2, IDO 5.3/7.1 (via `ido-static-recomp`, license-gated), GBA agbcc, plus the MIPS/arm/powerpc binutils they need. CI proves each build's **MIPS/ARM codegen is byte-for-byte identical to the official x86-64 releases** (references in `termux/reference/`); the on-device sanity test re-proves it after install. GC/Wii/DS (CodeWarrior through `wibo`) and PS2 (i386-only EE-GCC 2.96, no public source) are honestly unsupported — see the table above. Original tool and credits: sam wolfs (i12bp8) and the decomp community; this port keeps upstream's MIT `LICENSE`.
+
+## O que mudou em relação ao upstream
+
+Lista completa para facilitar rebase e um eventual pull request. O histórico do upstream é preservado; cada mudança é um commit pequeno em cima dele (`upstream` aponta para `i12bp8/decomp.wtf`).
+
+1. **`src/decompnet/compiler.py`** — no Termux (sem bwrap/prlimit), os limites por compilação (`--as/--fsize`) são aplicados com um wrapper `ulimit` do shell; `DECOMP_NO_ULIMIT=1` desativa.
+2. **`src/decompnet/app/cli.py`** — abre o navegador com `termux-open-url`/`termux-open` quando disponíveis.
+3. **`src/decompnet/app/launcher.py`** — Android não tem menu de apps; retorna uma mensagem clara.
+4. **`src/decompnet/toolchains.toml`** — partes `linux-aarch64` para os compiladores de época (builds estáticos deste repo, release `toolchains-v1`), pin de checksums por SHA-256 como no upstream; o `cmd` do agbcc usa `sh` do PATH em vez de `/bin/sh`.
+5. **`projects/zlib-n64/prepare.py`** — espelho alternativo fixado para o zlib 1.1.4 (o site do zlib removeu o tarball; o checksum continua obrigatório).
+6. **`termux/`** (novo) — `install.sh`, comandos `decomp`/`decomp-update`/`decomp-uninstall`, `sanity-test.sh`, scripts de build dos compiladores (`toolchain-build/`) com patches de host, e as referências byte a byte (`reference/`).
+7. **`.github/workflows/`** (novo) — `ci.yml` (shellcheck + pytest x86-64) e `toolchains.yml` (build aarch64 nos runners ARM64, validação de codegen contra as referências e suite pytest PSX/N64/GBA).
+8. **`README.md`** — reescrito para o port (pt-BR + resumo em inglês); `LICENSE` original intacto.
+
+Não alterado de propósito: política de licenças proprietárias (IDO/CodeWarrior exigem aceitação explícita), sandbox em outros sistemas, servidor MCP, API web e toda a lógica de julgamento byte a byte.
