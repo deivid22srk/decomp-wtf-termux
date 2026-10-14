@@ -35,7 +35,7 @@ bash "$HERE/build-binutils-2.6.sh" "$WORK/mips-binutils-2.6" "$OUT/stage-binutil
 tar -czf "$OUT/binutils-2.6-aarch64.tar.gz" -C "$OUT/stage-binutils-2.6" .
 
 # --------------------------------------------------------------- N64: KMC GCC 2.7.2
-bash "$HERE/build-gcc-2.7.2-kmc.sh" "$WORK/mips-gcc-2.7.2" "$OUT/stage-gcc-2.7.2-kmc" "$WORK/old-gcc"
+bash "$HERE/build-gcc-2.7.2-kmc.sh" "$WORK/mips-gcc-2.7.2" "$OUT/stage-gcc-2.7.2-kmc"
 tar -czf "$OUT/gcc-2.7.2-kmc-aarch64.tar.gz" -C "$OUT/stage-gcc-2.7.2-kmc" .
 
 # --------------------------------------------------------------- PS1: GCC 2.7.2 / 2.8.1

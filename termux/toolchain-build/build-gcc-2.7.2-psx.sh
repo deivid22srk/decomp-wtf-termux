@@ -29,6 +29,9 @@ patch -u -p1 configure -i "$P/configure.patch"
 patch -u -p1 config.sub -i "$P/config.sub.patch"
 patch -u -p1 config/mips/mips.h -i "$P/mipsel-2.7.patch"
 patch -su -p1 < "$P/psx-2.5.7.patch"
+# aarch64 glibc has no sys_nerr/sys_errlist compat symbols (x86 legacy): the driver must
+# use strerror(). old-gcc's own patch does exactly that, gated on HAVE_STRERROR.
+patch -u -p1 gcc.c -i "$P/gcc-2.5.7.c.patch"
 
 # --- Termux port: teach the 1995 host machinery about 64-bit ARM/x86-64 Linux hosts ---
 patch -su -p1 < "$HERE/patches/gcc-2.7.2-aarch64-host.patch"
