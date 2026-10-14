@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 # Build decompals/mips-gcc-2.7.2 (the KMC-compatible N64 compiler) for the host, statically linked.
-# Usage: build-gcc-2.7.2-kmc.sh <source-tree> <out-dir>
+# Usage: build-gcc-2.7.2-kmc.sh <source-tree> <out-dir> [<old-gcc-checkout>]
+#   The optional old-gcc checkout provides the driver patch that makes gcc.c use strerror()
+#   instead of glibc's x86-only sys_nerr/sys_errlist compat symbols (they never existed on
+#   aarch64, where this port builds).
 set -euo pipefail
-SRC=${1:?source tree}; OUT=${2:?out dir}
+SRC=${1:?source tree}; OUT=${2:?out dir}; OLDGCC=${3:-}
 HERE=$(cd "$(dirname "$0")" && pwd)
 BUILD=${BUILD:-$PWD/.build-gcc-2.7.2-kmc}
 JOBS=$(nproc)
 
 rm -rf "$BUILD" && cp -a "$SRC" "$BUILD" && cd "$BUILD"
 patch -su -p1 < "$HERE/patches/gcc-2.7.2-aarch64-host.patch"
+if [ -n "$OLDGCC" ]; then
+  patch -u -p1 gcc.c -i "$OLDGCC/patches/gcc-2.5.7.c.patch"
+fi
 sh config.sub aarch64-unknown-linux >/dev/null
 
 HOST_TRIPLE=aarch64-unknown-linux
