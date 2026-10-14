@@ -67,9 +67,9 @@ touch c-parse.c cp/parse.c cp/parse.h 2>/dev/null || true
 make --jobs "$JOBS" cpp cc1 xgcc cc1plus g++ CFLAGS="-O2 -std=gnu89 -static -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error -Wno-return-type -Wno-implicit-function-declaration -Wno-int-conversion -DHAVE_STRERROR"
 
 # upstream's own smoke tests (must pass on any host: this is mipsel codegen)
-./cc1 -quiet -O2 "$OLDGCC/tests/little_endian.c" && grep -E 'lbu\s\$2,0\(\$4\)' little_endian.s
-./cc1 -quiet -O2 "$OLDGCC/tests/section_attribute.c"
-./cc1 -quiet -O2 "$OLDGCC/tests/host_wide_int.c" && grep -E '# 0x80000000$' host_wide_int.s
+./cc1 -quiet -O2 "$OLDGCC/tests/little_endian.c" -o /tmp/le.s && grep -E 'lbu\s\$2,0\(\$4\)' /tmp/le.s
+./cc1 -quiet -O2 "$OLDGCC/tests/section_attribute.c" -o /tmp/sa.s
+./cc1 -quiet -O2 "$OLDGCC/tests/host_wide_int.c" -o /tmp/hw.s && grep -E '# 0x80000000$' /tmp/hw.s
 
 mkdir -p "$OUT"
 mv xgcc "$OUT/gcc"
