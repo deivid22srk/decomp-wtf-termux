@@ -14,8 +14,12 @@ import tarfile
 import urllib.request
 
 HERE = pathlib.Path(__file__).resolve().parent
+# zlib.net's fossils stopped serving the tarball (the URL now returns HTML), so the port adds
+# the GitHub tag archive as a pinned fallback; both unpack the same zlib 1.1.4 sources.
 URL = "https://zlib.net/fossils/zlib-1.1.4.tar.gz"
 SHA256 = "9e3e973174f9910fd51539ef9ce94c86a3943d4f897fab8e9adf4b19e6a8291e"
+MIRRORS = [("https://github.com/madler/zlib/archive/refs/tags/v1.1.4.tar.gz",
+            "5bac3572a0c8f7f03e49e69cbebf6e204b923e88cac977a9dfba5bfab0764081")]
 CORE = ["adler32.c", "compress.c", "crc32.c", "deflate.c", "infblock.c", "infcodes.c", "inffast.c", "inflate.c",
         "inftrees.c", "infutil.c", "trees.c", "uncompr.c", "zutil.c"]
 # zlib has two different `struct internal_state`s (compression vs decompression) and per-file macros and
@@ -25,9 +29,17 @@ def fetch() -> pathlib.Path:
     out = HERE / "original"
     if (out / "zlib.h").exists():
         return out
-    data = urllib.request.urlopen(URL, timeout=60).read()
-    if hashlib.sha256(data).hexdigest() != SHA256:
-        raise SystemExit("checksum mismatch: refusing to use this archive")
+    data = None
+    for url, sha in [(URL, SHA256), *MIRRORS]:
+        try:
+            candidate = urllib.request.urlopen(url, timeout=60).read()
+        except OSError:
+            continue
+        if hashlib.sha256(candidate).hexdigest() == sha:
+            data = candidate
+            break
+    if data is None:
+        raise SystemExit("no mirror of zlib 1.1.4 matched its pinned checksums; refusing to continue")
     out.mkdir(exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(data)) as tar:
         for m in tar.getmembers():
